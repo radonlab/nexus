@@ -4,6 +4,8 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
+import android.webkit.WebView
+import android.webkit.WebViewClient
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -24,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import kotlinx.coroutines.launch
 import org.radonlab.nexus.ui.theme.NexusTheme
 
@@ -33,51 +36,19 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        val bridge = RuntimeJsBridge(
+            activity = this,
+        )
         enableEdgeToEdge()
         setContent {
             NexusTheme {
-                val snackbarHostState = remember { SnackbarHostState() }
-                val scope = rememberCoroutineScope()
-                val context = LocalContext.current
-
-                Scaffold(
-                    modifier = Modifier.fillMaxSize(),
-                    snackbarHost = { SnackbarHost(snackbarHostState) }
-                ) { innerPadding ->
-                    Column(
+                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
+                    MainWebView(
+                        bridge = bridge,
                         modifier = Modifier
                             .padding(innerPadding)
-                            .fillMaxSize(),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        Greeting(
-                            name = "Android",
-                            modifier = Modifier.padding(bottom = 16.dp)
-                        )
-                        Button(
-                            onClick = {
-                                if (Settings.canDrawOverlays(context)) {
-                                    context.startService(Intent(context, OverlayService::class.java))
-                                } else {
-                                    pendingOverlayStart = true
-                                    context.startActivity(
-                                        Intent(
-                                            Settings.ACTION_MANAGE_OVERLAY_PERMISSION,
-                                            Uri.parse("package:${context.packageName}")
-                                        )
-                                    )
-                                    scope.launch {
-                                        snackbarHostState.showSnackbar(
-                                            "Please enable \"Display over other apps\" to use the overlay"
-                                        )
-                                    }
-                                }
-                            }
-                        ) {
-                            Text("Show Overlay")
-                        }
-                    }
+                            .fillMaxSize()
+                    )
                 }
             }
         }
@@ -93,17 +64,16 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
+private fun MainWebView(bridge: RuntimeJsBridge, modifier: Modifier = Modifier) {
+    AndroidView(
+        factory = { context ->
+            WebView(context).apply {
+                settings.javaScriptEnabled = true
+                webViewClient = WebViewClient()
+                addJavascriptInterface(bridge, "NexusAndroid")
+                loadUrl("file:///android_asset/index.html")
+            }
+        },
         modifier = modifier
     )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    NexusTheme {
-        Greeting("Android")
-    }
 }
