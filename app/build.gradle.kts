@@ -48,6 +48,23 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+    // Lynx dependencies
+    implementation("org.lynxsdk.lynx:lynx:3.6.0")
+    implementation("org.lynxsdk.lynx:lynx-jssdk:3.6.0")
+    implementation("org.lynxsdk.lynx:lynx-trace:3.6.0")
+    implementation("org.lynxsdk.lynx:primjs:3.6.1")
+    implementation("org.lynxsdk.lynx:lynx-service-image:3.6.0")
+    implementation("com.facebook.fresco:fresco:2.3.0")
+    implementation("com.facebook.fresco:animated-gif:2.3.0")
+    implementation("com.facebook.fresco:animated-webp:2.3.0")
+    implementation("com.facebook.fresco:webpsupport:2.3.0")
+    implementation("com.facebook.fresco:animated-base:2.3.0")
+    implementation("org.lynxsdk.lynx:lynx-service-log:3.6.0")
+    implementation("org.lynxsdk.lynx:lynx-service-http:3.6.0")
+    implementation("com.squareup.okhttp3:okhttp:4.9.0")
+    implementation("org.lynxsdk.lynx:xelement:3.6.0")
+    implementation("org.lynxsdk.lynx:xelement-input:3.6.0")
+    // Testing dependencies
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
@@ -55,4 +72,15 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+}
+
+// Transitive deps (e.g. Fresco) can resolve vectordrawable 1.0.0, whose manifests
+// collide under AGP 8+; force a newer line.
+configurations.all {
+    resolutionStrategy {
+        force(
+            "androidx.vectordrawable:vectordrawable:1.2.0",
+            "androidx.vectordrawable:vectordrawable-animated:1.2.0",
+        )
+    }
 }

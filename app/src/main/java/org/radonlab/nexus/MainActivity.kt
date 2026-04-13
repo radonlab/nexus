@@ -1,33 +1,20 @@
 package org.radonlab.nexus
 
 import android.content.Intent
-import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
-import android.webkit.WebView
-import android.webkit.WebViewClient
+import android.view.ViewGroup
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Button
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import kotlinx.coroutines.launch
+import com.lynx.tasm.LynxViewBuilder
+import com.lynx.xelement.XElementBehaviors
 import org.radonlab.nexus.ui.theme.NexusTheme
 
 class MainActivity : ComponentActivity() {
@@ -36,15 +23,11 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val bridge = RuntimeJsBridge(
-            activity = this,
-        )
         enableEdgeToEdge()
         setContent {
             NexusTheme {
                 Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    MainWebView(
-                        bridge = bridge,
+                    LynxHost(
                         modifier = Modifier
                             .padding(innerPadding)
                             .fillMaxSize()
@@ -64,16 +47,22 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-private fun MainWebView(bridge: RuntimeJsBridge, modifier: Modifier = Modifier) {
+private fun LynxHost(modifier: Modifier = Modifier) {
     AndroidView(
         factory = { context ->
-            WebView(context).apply {
-                settings.javaScriptEnabled = true
-                webViewClient = WebViewClient()
-                addJavascriptInterface(bridge, "NexusAndroid")
-                loadUrl("file:///android_asset/index.html")
-            }
+            val viewBuilder = LynxViewBuilder()
+            viewBuilder.addBehaviors(XElementBehaviors().create())
+            viewBuilder.setTemplateProvider(AssetsTemplateProvider(context))
+            val lynxView = viewBuilder.build(context)
+            lynxView.layoutParams = ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
+            )
+            lynxView.renderTemplateUrl(LYNX_ENTRY_BUNDLE, "")
+            lynxView
         },
         modifier = modifier
     )
 }
+
+private const val LYNX_ENTRY_BUNDLE = "main.lynx.bundle"
