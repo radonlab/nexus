@@ -10,6 +10,7 @@
     "preview": "rspeedy preview"
   },
   "dependencies": {
+    "@lynx-js/lynx-ui": "^3.130.1",
     "@lynx-js/react": "^0.118.0"
   },
   "devDependencies": {
